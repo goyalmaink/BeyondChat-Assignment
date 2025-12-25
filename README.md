@@ -285,48 +285,12 @@ Node Service → Laravel API → Updates Article with reference_articles
 
 ## 🗂️ Data flow / Architecture
 
-```mermaid
-flowchart TD
-  subgraph Backend [Laravel Backend]
-    direction TB
-    SCR[Scraper<br/>(Console: scrape:articles)]
-    API[Laravel API<br/>(/api/articles)]
-    DB[(Articles DB)]
-  end
+<img width="1312" height="450" alt="image" src="https://github.com/user-attachments/assets/8c09df67-ac2e-4530-90de-aa239891afd4" />
 
-  subgraph Service [Search Service]
-    direction TB
-    NODE[Node Service<br/>POST /related-articles<br/>POST /fetch-latest-and-search]
-    GOOGLE[Google Custom Search API]
-  end
+---
+## Using Nano Banana
+<img width="1024" height="1024" alt="image" src="https://github.com/user-attachments/assets/467c712f-30b4-4b7a-b9a6-079fe076a71d" />
 
-  subgraph Frontend [React / Vite]
-    direction TB
-    FE[Frontend UI<br/>List / Detail / Refresh / Find links]
-  end
-
-  SCR -->|stores scraped article| DB
-  DB -->|article list (JSON)| API
-  API -->|GET /api/articles| FE
-  FE -->|POST { title }| NODE
-  NODE -->|Google CSE request| GOOGLE
-  GOOGLE -->|results| NODE
-  NODE -->|returns { links }| FE
-  NODE -->|PATCH /api/articles/{id} { reference_articles }| API
-
-  %% Failure / Retry flows
-  GOOGLE -.->|quota / network error| NODE
-  SCR -.->|no new articles| FE
-
-  classDef backend fill:#fef3c7,stroke:#f59e0b;
-  classDef service fill:#fff1f2,stroke:#fb7185;
-  classDef frontend fill:#eef2ff,stroke:#6366f1;
-  class SCR,API,DB backend;
-  class NODE,GOOGLE service;
-  class FE frontend;
-```
-
-Data flow summary: The Laravel scraper detects and saves new articles to the Articles DB; the React frontend fetches articles via the Laravel API and shows Original / Updated versions. When a user requests related links, the frontend calls the Node service (which queries Google Custom Search) and shows the top links, which the Node service may persist back to Laravel as `reference_articles`.
 
 ### Legend
 - Solid arrows: main request/response flow (HTTP / function calls)
