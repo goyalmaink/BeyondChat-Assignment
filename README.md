@@ -60,99 +60,16 @@ Usage:
 
 ## 🗂️ Data flow / Architecture
 
-```mermaid
-flowchart TD
-  subgraph Backend [Laravel Backend]
-    direction TB
-    SCR[Scraper<br/>(Console: scrape:articles)]
-    API[Laravel API<br/>(/api/articles)]
-    DB[(Articles DB)]
-  end
-
-  subgraph Service [Search Service]
-    direction TB
-    NODE[Node Service<br/>POST /related-articles<br/>POST /fetch-latest-and-search]
-    GOOGLE[Google Custom Search API]
-  end
-
-  subgraph Frontend [React / Vite]
-    direction TB
-    FE[Frontend UI<br/>List / Detail / Refresh / Find links]
-  end
-
-  SCR -->|stores scraped article| DB
-  DB -->|article list (JSON)| API
-  API -->|GET /api/articles| FE
-  FE -->|POST { title }| NODE
-  NODE -->|Google CSE request| GOOGLE
-  GOOGLE -->|results| NODE
-  NODE -->|returns { links }| FE
-  NODE -->|PATCH /api/articles/{id} { reference_articles }| API
-
-  %% Failure / Retry flows
-  GOOGLE -.->|quota / network error| NODE
-  SCR -.->|no new articles| FE
-
-  classDef backend fill:#fef3c7,stroke:#f59e0b;
-  classDef service fill:#fff1f2,stroke:#fb7185;
-  classDef frontend fill:#eef2ff,stroke:#6366f1;
-  class SCR,API,DB backend;
-  class NODE,GOOGLE service;
-  class FE frontend;
-```
-
-Data flow summary: The Laravel scraper detects and saves new articles to the Articles DB; the React frontend fetches articles via the Laravel API and shows Original / Updated versions. When a user requests related links, the frontend calls the Node service (which queries Google Custom Search) and shows the top links, which the Node service may persist back to Laravel as `reference_articles`.
-
-### Legend
-- Solid arrows: main request/response flow (HTTP / function calls)
-- Dashed arrows: error/edge cases (rate limits, no new articles)
-- Colors: Backend (yellow), Service (pink), Frontend (blue)
-
-### Key endpoints & env variables
-- Laravel: GET `/api/articles`, GET `/api/articles/{id}`, POST `/api/articles/refresh`, PATCH `/api/articles/{id}`
-- Node: POST `/related-articles` (body: { title }), POST `/fetch-latest-and-search`
-- Env / secrets: `GOOGLE_API_KEY`, `GOOGLE_CX`, `LARAVEL_API_URL`, `ANTHROPIC_API_KEY` (optional)
+<img width="1356" height="522" alt="image" src="https://github.com/user-attachments/assets/b7cfc925-11b8-4cd3-886b-d147ba78e6c9" />
 
 ---
 
-If you'd like, I can also export this diagram to an SVG/png and add the asset to the repo and a direct image link in the README. Would you like an SVG export added as well?
+## Using Nano Banana
+<img width="1024" height="1024" alt="image" src="https://github.com/user-attachments/assets/7c1ca8a3-f1c3-4981-8cc3-47f0c4101cc2" />
 
----
 
-## 🔗 Live Frontend
 
-If you deploy the frontend to a hosting provider (Vercel / Netlify / Surge), paste your live URL here so reviewers can open it directly. Example:
 
-**Live frontend**: <REPLACE_WITH_YOUR_DEPLOYED_URL>
 
-When a live link is present, you can check an article and toggle between the **Original** and **Updated** versions in the article detail view.
 
----
 
-## 🧪 Useful API endpoints
-
-- GET `/api/articles` — list saved articles (latest first)
-- GET `/api/articles/{id}` — show an article
-- POST `/api/articles/refresh` — scrape blog listing and persist the first **new** article (returns 201 and the article, or 204 if nothing new)
-- POST `/fetch-latest-and-search` (Node) — fetches latest article from Laravel and searches for related links
-- POST `/related-articles` (Node) — accepts `{ title }` and returns `{ links: [...] }`
-
----
-
-## ♻️ Deploy notes (quick)
-
-- Frontend: push to Vercel or Netlify and point the build to the `backend/frontend` folder (or create a standalone Vite app). Ensure `LARAVEL_API_URL` in the Node service points to your deployed Laravel API.
-- Node service: deploy to a server or serverless function; ensure env vars for Google API are set.
-- Laravel: deploy to a PHP host with DB and set up cron/workers if you want periodic scraping.
-
----
-
-## 🧾 Contact / Next steps
-
-If you'd like, I can:
-- Add a minimal `README` section with one-click deploy (e.g., Netlify/Vercel configuration), or
-- Add a PHPUnit feature test for `POST /api/articles/refresh` and a small integration test for the Node `searching` flow.
-
----
-
-*Edited on: 25 Dec 2025*
