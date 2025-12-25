@@ -1,5 +1,5 @@
 const LARAVEL_API = "http://localhost:8000/api";
-const NODE_API = "http://localhost:3000";
+const NODE_API = "beyond-chat-assignment-script.vercel.app";
 
 export async function fetchArticles() {
     const res = await fetch(`${LARAVEL_API}/articles`);
