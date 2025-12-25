@@ -61,22 +61,61 @@ Usage:
 ## 🗂️ Data flow / Architecture
 
 ```mermaid
-flowchart LR
-  A[Scraper (Laravel Console Command)] -->|Stores| B[(Articles DB)]
-  B --> C[Laravel API (GET /api/articles)]
-  C -->|Consumed by| D[Frontend (React)]
-  D -->|'Find related links'| E[Node service: Google Search helper]
-  E -->|returns| D
-  E -->|patches| C
-  E --> F[Google Custom Search API]
-  style A fill:#fef3c7,stroke:#f59e0b
-  style B fill:#ecfeff,stroke:#06b6d4
-  style D fill:#eef2ff,stroke:#6366f1
-  style E fill:#fff1f2,stroke:#fb7185
-  style F fill:#fff7ed,stroke:#f97316
+flowchart TD
+  subgraph Backend [Laravel Backend]
+    direction TB
+    SCR[Scraper<br/>(Console: scrape:articles)]
+    API[Laravel API<br/>(/api/articles)]
+    DB[(Articles DB)]
+  end
+
+  subgraph Service [Search Service]
+    direction TB
+    NODE[Node Service<br/>POST /related-articles<br/>POST /fetch-latest-and-search]
+    GOOGLE[Google Custom Search API]
+  end
+
+  subgraph Frontend [React / Vite]
+    direction TB
+    FE[Frontend UI<br/>List / Detail / Refresh / Find links]
+  end
+
+  SCR -->|stores scraped article| DB
+  DB -->|article list (JSON)| API
+  API -->|GET /api/articles| FE
+  FE -->|POST { title }| NODE
+  NODE -->|Google CSE request| GOOGLE
+  GOOGLE -->|results| NODE
+  NODE -->|returns { links }| FE
+  NODE -->|PATCH /api/articles/{id} { reference_articles }| API
+
+  %% Failure / Retry flows
+  GOOGLE -.->|quota / network error| NODE
+  SCR -.->|no new articles| FE
+
+  classDef backend fill:#fef3c7,stroke:#f59e0b;
+  classDef service fill:#fff1f2,stroke:#fb7185;
+  classDef frontend fill:#eef2ff,stroke:#6366f1;
+  class SCR,API,DB backend;
+  class NODE,GOOGLE service;
+  class FE frontend;
 ```
 
-This diagram summarizes the typical request path: the Laravel scraper populates the DB; the frontend reads articles via the Laravel API; the Node service performs Google Custom Search for a given article title, returns the top external links to the frontend, and persists them back on the Laravel `articles` resource as `reference_articles`.
+Data flow summary: The Laravel scraper detects and saves new articles to the Articles DB; the React frontend fetches articles via the Laravel API and shows Original / Updated versions. When a user requests related links, the frontend calls the Node service (which queries Google Custom Search) and shows the top links, which the Node service may persist back to Laravel as `reference_articles`.
+
+### Legend
+- Solid arrows: main request/response flow (HTTP / function calls)
+- Dashed arrows: error/edge cases (rate limits, no new articles)
+- Colors: Backend (yellow), Service (pink), Frontend (blue)
+
+### Key endpoints & env variables
+- Laravel: GET `/api/articles`, GET `/api/articles/{id}`, POST `/api/articles/refresh`, PATCH `/api/articles/{id}`
+- Node: POST `/related-articles` (body: { title }), POST `/fetch-latest-and-search`
+- Env / secrets: `GOOGLE_API_KEY`, `GOOGLE_CX`, `LARAVEL_API_URL`, `ANTHROPIC_API_KEY` (optional)
+
+---
+
+If you'd like, I can also export this diagram to an SVG/png and add the asset to the repo and a direct image link in the README. Would you like an SVG export added as well?
 
 ---
 
