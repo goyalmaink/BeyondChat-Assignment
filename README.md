@@ -33,7 +33,7 @@ A full-stack application to scrape blog posts from BeyondChats, store them in a 
 ### Backend (Laravel)
 - **Framework**: Laravel 12.x
 - **PHP**: 8.2+
-- **Database**: SQLite (default) / MySQL / PostgreSQL
+- **Database**: SUPABASE 
 - **Libraries**: 
   - Guzzle HTTP Client (for web scraping)
   - Symfony DOM Crawler (for HTML parsing)
@@ -44,7 +44,6 @@ A full-stack application to scrape blog posts from BeyondChats, store them in a 
 - **Libraries**:
   - Axios (HTTP client)
   - Anthropic SDK (optional, for summarization)
-  - Cheerio (HTML parsing)
 
 ### Frontend
 - **Framework**: React 19.x
