@@ -561,18 +561,4 @@ php artisan test
 - **Node.js**: Use ES6+ modules (project uses `"type": "module"`)
 - **React**: Use functional components with hooks
 
----
 
-## 📄 License
-
-This project is part of the BeyondChat assignment.
-
----
-
-## 👤 Author
-
-Developed as part of BeyondChat assignment.
-
----
-
-*Last updated: December 2025*
